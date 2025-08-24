@@ -1,7 +1,7 @@
 let currentImages = [];
 
 function loadSettings() {
-  chrome.storage.sync.get(['blockedUrls', 'images', 'imageUrls'
+  chrome.storage.sync.get(['blockedUrls', 'localImages', 'imageUrls'
     ], (result) => {
     const urlList = document.getElementById('urlList');
     const imageList = document.getElementById('imageList');
@@ -11,7 +11,7 @@ function loadSettings() {
     urlList.value = urls.join('\n');
     
     // Load local images (data URLs)
-    currentImages = result.images || [];
+    currentImages = result.localImages || [];
     displayImagePreviews();
     
     // Load image URLs

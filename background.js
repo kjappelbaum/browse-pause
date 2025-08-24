@@ -5,11 +5,11 @@ chrome.runtime.onInstalled.addListener(() => {
       chrome.storage.sync.set({
         blockedUrls: ['facebook.com', 'twitter.com', 'reddit.com'],
         images: [
-          'https: //picsum.photos/800/600?random=1',
-          'https: //picsum.photos/800/600?random=2',
-          'https: //picsum.photos/800/600?random=3',
-          'https: //picsum.photos/800/600?random=4',
-          'https: //picsum.photos/800/600?random=5'
+          'https://picsum.photos/800/600?random=1',
+          'https://picsum.photos/800/600?random=2',
+          'https://picsum.photos/800/600?random=3',
+          'https://picsum.photos/800/600?random=4',
+          'https://picsum.photos/800/600?random=5'
                 ]
             });
         }
@@ -25,10 +25,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const cleanUrl = url.replace(/^https?:\/\//, '').replace(/^www\./, '');
         return message.url.includes(cleanUrl);
             });
-      sendResponse({ shouldBlock
-            });
+
+      if (shouldBlock) {
+        chrome.tabs.update(sender.tab.id, { url: chrome.runtime.getURL('interceptor.html') + '?url=' + encodeURIComponent(message.url) });
+      }
         });
-    return true; // Async response
     } else if (message.type === 'getRandomImage') {
     chrome.storage.sync.get(['images'], (result) => {
       const images = result.images || [];
@@ -40,4 +41,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Async response
     }
 });
-
