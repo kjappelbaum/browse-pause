@@ -3,47 +3,57 @@
 <head>
   <style>
     body {
-      width: 350px;
+      width: 300px;
       padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
 }
     .header {
       text-align: center;
       margin-bottom: 20px;
 }
+    .header h2 {
+        font-weight: 600;
+        color: #333;
+    }
     .section {
       margin-bottom: 20px;
 }
     .section h3 {
       margin-bottom: 10px;
-      color: #333;
+      color: #555;
+      font-weight: 500;
+      font-size: 14px;
 }
     .url-list {
       max-height: 100px;
       overflow-y: auto;
-      border: 1px solid #ddd;
+      border: 1px solid #e0e0e0;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 6px;
       font-size: 12px;
+      background-color: #fff;
 }
     .btn {
-      background: #667eea;
+      background: #007bff;
       color: white;
       border: none;
       padding: 10px 20px;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
       width: 100%;
       margin-top: 10px;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
 }
     .btn:hover {
-      background: #5a6fd8;
+      background: #0056b3;
 }
   </style>
 </head>
 <body>
   <div class="header">
-    <h2>URL Interceptor</h2>
+    <h2>Browse Pause</h2>
   </div>
   
   <div class="section">
@@ -52,7 +62,7 @@
   </div>
   
   <div class="section">
-    <h3>Random Images</h3>
+    <h3>Image Count</h3>
     <div id="imageCount">Loading...</div>
   </div>
   
