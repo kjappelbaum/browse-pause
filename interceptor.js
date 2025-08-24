@@ -15,7 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chrome.runtime.sendMessage({ type: 'getRandomImage' }, (response) => {
         if (response && response.image) {
-            document.getElementById('randomImage').src = response.image;
+            const img = document.getElementById('randomImage');
+            img.src = response.image;
+            img.onerror = () => {
+                console.log('Failed to load image:', response.image);
+                // Fallback to a solid color background if image fails
+                img.style.display = 'none';
+            };
+        } else {
+            console.log('No image received from background script');
+            document.getElementById('randomImage').style.display = 'none';
         }
     });
 });
