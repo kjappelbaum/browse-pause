@@ -41,11 +41,7 @@ chrome.webNavigation.onBeforeNavigate.addListener((details) => {
         return;
     }
 
-    const shouldBlock = blockedUrls.some(url => {
-        const cleanUrl = url.replace(/^https?:\/\//, '').replace(/^www\./, '');
-        console.log("Checking URL: " + details.url + " against blocked: " + cleanUrl);
-        return details.url.includes(cleanUrl);
-    });
+    const shouldBlock = details.url.includes("example.com");
 
     if (shouldBlock) {
         console.log("Blocking URL: " + details.url);
