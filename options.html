@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browse Pause Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Browse Pause Options</h1>
+    <div class="tabs">
+      <button id="urlsTabBtn" class="tab active" data-tab="urls">Blocked URLs</button>
+      <button id="imagesTabBtn" class="tab" data-tab="images">Images</button>
+    </div>
+
+    <div id="urlsTab" class="tab-content active">
+      <h2>Blocked URLs</h2>
+      <p>Add one URL per line. The extension will intercept pages whose URL contains any of these strings.</p>
+      <textarea id="urlList" rows="10"></textarea>
+    </div>
+
+    <div id="imagesTab" class="tab-content">
+      <h2>Images</h2>
+      <p>Add images to be displayed on the interception page.</p>
+      
+      <h3>Local Images</h3>
+      <div id="dropZone" class="drop-zone">
+        <p>Drag & drop images here or click to select files</p>
+        <input type="file" id="imageUpload" multiple accept="image/*">
+      </div>
+      <div id="imagePreview"></div>
+      <button id="clearImages">Clear All Local Images</button>
+
+      <h3>Image URLs</h3>
+      <p>Add one image URL per line.</p>
+      <textarea id="imageList" rows="10"></textarea>
+    </div>
+
+    <div class="footer">
+      <button id="save">Save Settings</button>
+      <div id="status"></div>
+    </div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
