@@ -21,7 +21,7 @@ chrome.runtime.onInstalled.addListener(() => {
             ];
             
             chrome.storage.sync.set({
-                blockedUrls: ['facebook.com', 'twitter.com', 'reddit.com', 'scholar.google.com'],
+                blockedUrls: ['facebook.com', 'twitter.com', 'reddit.com', 'linkedin.com'],
                 imageUrls: defaultImageUrls
             }, () => {
                 // Initialize empty local images storage
