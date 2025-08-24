@@ -25,17 +25,3 @@ A minimalistic Chrome extension that helps you be more mindful of your browsing 
    - **Images**: Choose from URL-based images or upload your own local images
 3. When you visit a blocked site, you'll see a pause page with a calming image
 4. Choose "Continue to Site" to proceed or "Go Back" to return
-
-## Default Blocked Sites
-
-- facebook.com
-- twitter.com  
-- reddit.com
-- scholar.google.com
-
-## Technical Details
-
-- Built for Chrome Manifest V3
-- Uses `chrome.tabs.onUpdated` for URL monitoring
-- Stores settings in `chrome.storage.sync`
-- Beautiful Unsplash nature images by default
