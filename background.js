@@ -1,3 +1,5 @@
+let approvedTabs = {};
+
 chrome.runtime.onInstalled.addListener(() => {
     // Initialize default settings
   chrome.storage.sync.get(['blockedUrls', 'images'], (result) => {
@@ -16,28 +18,36 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
-// Listen for messages from content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'shouldBlock') {
-    chrome.storage.sync.get(['blockedUrls'], (result) => {
-      const blockedUrls = result.blockedUrls || [];
-      const shouldBlock = blockedUrls.some(url => {
-        const cleanUrl = url.replace(/^https?:\/\//, '').replace(/^www\./, '');
-        return message.url.includes(cleanUrl);
-            });
+chrome.webNavigation.onBeforeNavigate.addListener((details) => {
+    if (approvedTabs[details.tabId]) {
+        delete approvedTabs[details.tabId];
+        return;
+    }
 
-      if (shouldBlock) {
-        chrome.tabs.update(sender.tab.id, { url: chrome.runtime.getURL('interceptor.html') + '?url=' + encodeURIComponent(message.url) });
-      }
+    chrome.storage.sync.get(['blockedUrls'], (result) => {
+        const blockedUrls = result.blockedUrls || [];
+        const shouldBlock = blockedUrls.some(url => {
+            const cleanUrl = url.replace(/^https?:\/\//, '').replace(/^www\./, '');
+            return details.url.includes(cleanUrl);
         });
+
+        if (shouldBlock) {
+            chrome.tabs.update(details.tabId, { url: chrome.runtime.getURL('interceptor.html') + '?url=' + encodeURIComponent(details.url) });
+        }
+    });
+}, { url: [{ urlMatches: '<all_urls>' }] });
+
+// Listen for messages from the interceptor script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'approveTab') {
+        approvedTabs[sender.tab.id] = true;
+        chrome.tabs.update(sender.tab.id, { url: message.url });
     } else if (message.type === 'getRandomImage') {
-    chrome.storage.sync.get(['images'], (result) => {
-      const images = result.images || [];
-      const randomImage = images[Math.floor(Math.random() * images.length)
-            ];
-      sendResponse({ image: randomImage
-            });
+        chrome.storage.sync.get(['images'], (result) => {
+            const images = result.images || [];
+            const randomImage = images[Math.floor(Math.random() * images.length)];
+            sendResponse({ image: randomImage });
         });
-    return true; // Async response
+        return true; // Async response
     }
 });

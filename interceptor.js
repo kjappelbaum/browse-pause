@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     urlInfo.innerHTML = `You were trying to visit: <strong>${originalUrl}</strong>`;
 
     document.getElementById('continueBtn').addEventListener('click', () => {
-        sessionStorage.setItem('browse-pause-proceed', 'true');
-        window.location.href = originalUrl;
+        chrome.runtime.sendMessage({ type: 'approveTab', url: originalUrl });
     });
 
     document.getElementById('backBtn').addEventListener('click', () => {

@@ -5,7 +5,8 @@
     "description": "A Chrome extension to help you be more mindful of your browsing habits by intercepting visits to specified websites with a calming image.",
     "permissions": [
         "storage",
-        "activeTab"
+        "activeTab",
+        "webNavigation"
     ],
     "host_permissions": [
         "<all_urls>"
@@ -13,17 +14,6 @@
     "background": {
         "service_worker": "background.js"
     },
-    "content_scripts": [
-        {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "content.js"
-            ],
-            "run_at": "document_start"
-        }
-    ],
     "options_page": "options.html",
     "action": {
         "default_popup": "popup.html",
