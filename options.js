@@ -52,18 +52,28 @@ function loadSettings() {
     
     console.log('Loaded sync settings:', result);
     
-    if (result.blockedUrls) {
-      document.getElementById('urlList').value = result.blockedUrls.join('\n');
+    // Safely populate URL list
+    const urlList = document.getElementById('urlList');
+    if (urlList && result.blockedUrls) {
+      urlList.value = result.blockedUrls.join('\n');
     }
     
     currentImageUrls = result.imageUrls || [];
-    document.getElementById('imageList').value = currentImageUrls.join('\n');
+    const imageList = document.getElementById('imageList');
+    if (imageList) {
+      imageList.value = currentImageUrls.join('\n');
+    }
     
-    // Load custom text settings
-    document.getElementById('pauseMessage').value = result.pauseMessage || 'Take a breath';
-    document.getElementById('pauseSubtext').value = result.pauseSubtext || 'You were trying to visit: {url}';
-    document.getElementById('continueButtonText').value = result.continueButtonText || 'Continue to Site';
-    document.getElementById('backButtonText').value = result.backButtonText || 'Go Back';
+    // Load custom text settings with null checks
+    const pauseMessageInput = document.getElementById('pauseMessage');
+    const pauseSubtextInput = document.getElementById('pauseSubtext');
+    const continueButtonTextInput = document.getElementById('continueButtonText');
+    const backButtonTextInput = document.getElementById('backButtonText');
+    
+    if (pauseMessageInput) pauseMessageInput.value = result.pauseMessage || 'Take a breath';
+    if (pauseSubtextInput) pauseSubtextInput.value = result.pauseSubtext || 'You were trying to visit: {url}';
+    if (continueButtonTextInput) continueButtonTextInput.value = result.continueButtonText || 'Continue to Site';
+    if (backButtonTextInput) backButtonTextInput.value = result.backButtonText || 'Go Back';
     
     // Load local images using storage.local (for larger data)
     chrome.storage.local.get(['localImages'], (localResult) => {
@@ -194,17 +204,31 @@ function clearAllImages() {
 function saveSettings() {
   console.log('Saving settings...');
   
-  const urlText = document.getElementById('urlList').value;
+  const urlList = document.getElementById('urlList');
+  const imageList = document.getElementById('imageList');
+  
+  if (!urlList || !imageList) {
+    console.error('Required elements not found');
+    showStatus('Error: Page elements not loaded properly', 'error');
+    return;
+  }
+  
+  const urlText = urlList.value;
   const blockedUrls = urlText.split('\n').filter(url => url.trim());
   
-  const imageUrlText = document.getElementById('imageList').value;
+  const imageUrlText = imageList.value;
   const imageUrls = imageUrlText.split('\n').filter(url => url.trim());
   
-  // Get custom text values
-  const pauseMessage = document.getElementById('pauseMessage').value;
-  const pauseSubtext = document.getElementById('pauseSubtext').value;
-  const continueButtonText = document.getElementById('continueButtonText').value;
-  const backButtonText = document.getElementById('backButtonText').value;
+  // Get custom text values with null checks
+  const pauseMessageInput = document.getElementById('pauseMessage');
+  const pauseSubtextInput = document.getElementById('pauseSubtext');
+  const continueButtonTextInput = document.getElementById('continueButtonText');
+  const backButtonTextInput = document.getElementById('backButtonText');
+  
+  const pauseMessage = pauseMessageInput ? pauseMessageInput.value : 'Take a breath';
+  const pauseSubtext = pauseSubtextInput ? pauseSubtextInput.value : 'You were trying to visit: {url}';
+  const continueButtonText = continueButtonTextInput ? continueButtonTextInput.value : 'Continue to Site';
+  const backButtonText = backButtonTextInput ? backButtonTextInput.value : 'Go Back';
   
   console.log('Saving blockedUrls:', blockedUrls);
   console.log('Saving imageUrls:', imageUrls);
@@ -245,66 +269,120 @@ function saveSettings() {
 
 function showStatus(message, type) {
   const status = document.getElementById('status');
+  if (!status) {
+    console.error('Status element not found, cannot show message:', message);
+    return;
+  }
+  
   status.textContent = message;
   status.className = `status ${type}`;
   status.style.display = 'block';
   
   setTimeout(() => {
-    status.style.display = 'none';
+    if (status) {
+      status.style.display = 'none';
+    }
   }, 3000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing options page...');
+    
+    // Load settings first
     loadSettings();
 
-    document.getElementById('save').addEventListener('click', saveSettings);
-    document.getElementById('clearImages').addEventListener('click', clearAllImages);
-
+    // Add event listeners with null checks
+    const saveBtn = document.getElementById('save');
+    const clearImagesBtn = document.getElementById('clearImages');
     const dropZone = document.getElementById('dropZone');
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
-    });
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        handleImageFiles(e.dataTransfer.files);
-    });
-    document.getElementById('imageUpload').addEventListener('change', (e) => {
-        handleImageFiles(e.target.files);
-    });
+    const imageUpload = document.getElementById('imageUpload');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSettings);
+    } else {
+        console.error('Save button not found');
+    }
+    
+    if (clearImagesBtn) {
+        clearImagesBtn.addEventListener('click', clearAllImages);
+    } else {
+        console.error('Clear images button not found');
+    }
 
-    document.getElementById('imagePreview').addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-btn')) {
-            const index = parseInt(e.target.dataset.index, 10);
-            currentImages.splice(index, 1);
-            displayImagePreviews();
-        }
-    });
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleImageFiles(e.dataTransfer.files);
+        });
+    } else {
+        console.error('Drop zone not found');
+    }
+    
+    if (imageUpload) {
+        imageUpload.addEventListener('change', (e) => {
+            handleImageFiles(e.target.files);
+        });
+    } else {
+        console.error('Image upload input not found');
+    }
 
-    document.getElementById('urlsTabBtn').addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        document.getElementById('urlsTabBtn').classList.add('active');
-        document.getElementById('urlsTab').classList.add('active');
-    });
+    if (imagePreview) {
+        imagePreview.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-btn')) {
+                const index = parseInt(e.target.dataset.index, 10);
+                currentImages.splice(index, 1);
+                displayImagePreviews();
+            }
+        });
+    } else {
+        console.error('Image preview container not found');
+    }
 
-    document.getElementById('imagesTabBtn').addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        document.getElementById('imagesTabBtn').classList.add('active');
-        document.getElementById('imagesTab').classList.add('active');
-    });
+    // Tab switching event listeners
+    const urlsTabBtn = document.getElementById('urlsTabBtn');
+    const imagesTabBtn = document.getElementById('imagesTabBtn');
+    const textTabBtn = document.getElementById('textTabBtn');
 
-    document.getElementById('textTabBtn').addEventListener('click', () => {
-        // Switch to text customization tab
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        document.getElementById('textTabBtn').classList.add('active');
-        document.getElementById('textTab').classList.add('active');
-    });
+    if (urlsTabBtn) {
+        urlsTabBtn.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            urlsTabBtn.classList.add('active');
+            const urlsTab = document.getElementById('urlsTab');
+            if (urlsTab) urlsTab.classList.add('active');
+        });
+    }
+
+    if (imagesTabBtn) {
+        imagesTabBtn.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            imagesTabBtn.classList.add('active');
+            const imagesTab = document.getElementById('imagesTab');
+            if (imagesTab) imagesTab.classList.add('active');
+        });
+    }
+
+    if (textTabBtn) {
+        textTabBtn.addEventListener('click', () => {
+            // Switch to text customization tab
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            textTabBtn.classList.add('active');
+            const textTab = document.getElementById('textTab');
+            if (textTab) textTab.classList.add('active');
+        });
+    }
+    
+    console.log('Options page initialization complete');
 });

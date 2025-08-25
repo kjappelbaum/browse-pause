@@ -3,6 +3,13 @@
     "name": "Browse Pause",
     "version": "1.0",
     "description": "A Chrome extension to help you be more mindful of your browsing habits by intercepting visits to specified websites with a calming image.",
+    "icons": {
+        "16": "chrome_extension_icons/icon_16.png",
+        "24": "chrome_extension_icons/icon_24.png",
+        "32": "chrome_extension_icons/icon_32.png",
+        "48": "chrome_extension_icons/icon_48.png",
+        "128": "chrome_extension_icons/icon_128.png"
+    },
     "permissions": [
         "storage",
         "activeTab",
@@ -18,7 +25,12 @@
     "options_page": "options.html",
     "action": {
         "default_popup": "popup.html",
-        "default_title": "Browse Pause Settings"
+        "default_title": "Browse Pause Settings",
+        "default_icon": {
+            "16": "chrome_extension_icons/icon_16.png",
+            "24": "chrome_extension_icons/icon_24.png",
+            "32": "chrome_extension_icons/icon_32.png"
+        }
     },
     "web_accessible_resources": [
         {
