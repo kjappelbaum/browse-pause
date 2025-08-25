@@ -1,6 +1,31 @@
+/**
+ * Browse Pause Extension - Background Script
+ * 
+ * This is the main service worker that runs in the background and handles:
+ * - URL monitoring and blocking
+ * - Storage management and initialization
+ * - Communication between different parts of the extension
+ * 
+ * Chrome Extensions use a "background script" (service worker in Manifest V3)
+ * that runs independently of any web page and handles extension logic.
+ */
+
+/**
+ * Global state variables
+ * These persist throughout the extension's lifecycle
+ */
+// Tracks tabs that have been approved to continue to their destination
 let approvedTabs = {};
+// Cached list of blocked URLs for quick access during URL checking
 let blockedUrls = [];
 
+/**
+ * Loads blocked URLs from Chrome storage into memory
+ * This function is called whenever we need to refresh the blocked URLs list
+ * 
+ * Why we cache URLs: Chrome storage is asynchronous, but URL checking needs to be fast.
+ * We cache the URLs in memory so we can quickly check them when tabs are loading.
+ */
 function loadBlockedUrls() {
     chrome.storage.sync.get(['blockedUrls'], (result) => {
         blockedUrls = result.blockedUrls || [];
@@ -8,6 +33,10 @@ function loadBlockedUrls() {
     });
 }
 
+/**
+ * Event listener that runs when the extension is first installed or updated
+ * This sets up the default configuration for the extension
+ */
 chrome.runtime.onInstalled.addListener(() => {
     // Initialize default settings
     chrome.storage.sync.get(['blockedUrls', 'imageUrls'], (result) => {
@@ -22,7 +51,11 @@ chrome.runtime.onInstalled.addListener(() => {
             
             chrome.storage.sync.set({
                 blockedUrls: ['facebook.com', 'twitter.com', 'reddit.com', 'linkedin.com'],
-                imageUrls: defaultImageUrls
+                imageUrls: defaultImageUrls,
+                pauseMessage: 'Take a breath',
+                pauseSubtext: 'You were trying to visit: {url}',
+                continueButtonText: 'Continue to Site',
+                backButtonText: 'Go Back'
             }, () => {
                 // Initialize empty local images storage
                 chrome.storage.local.set({
@@ -35,17 +68,26 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
-// Load blocked URLs when the service worker starts
+/**
+ * Load blocked URLs when the service worker starts
+ * Service workers can be terminated and restarted, so we need to reload our data
+ */
 loadBlockedUrls();
 
-// Listen for changes in storage to update blockedUrls
+/**
+ * Listen for changes in storage to update our cached blocked URLs
+ * This ensures the extension stays in sync when settings are changed
+ */
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'sync' && changes.blockedUrls) {
         loadBlockedUrls();
     }
 });
 
-// Check URLs when tabs are updated
+/**
+ * Main URL blocking logic - monitors all tab updates
+ * This is the core functionality that intercepts navigation attempts
+ */
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Only check when the URL actually changes and it's a complete load
     if (changeInfo.status === 'loading' && changeInfo.url) {
@@ -93,12 +135,17 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
 });
 
-// Listen for messages from the interceptor script
+/**
+ * Message handler for communication between different parts of the extension
+ * This handles requests from the interceptor page and other extension components
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'approveTab') {
+        // User clicked "Continue to Site" - mark this tab as approved
         approvedTabs[sender.tab.id] = true;
         chrome.tabs.update(sender.tab.id, { url: message.url });
     } else if (message.type === 'getRandomImage') {
+        // Interceptor page requesting a random image to display
         // Load both storage.sync (URLs) and storage.local (large images)
         chrome.storage.sync.get(['imageUrls'], (syncResult) => {
             chrome.storage.local.get(['localImages'], (localResult) => {
@@ -118,6 +165,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 
                 const randomImage = allImages[Math.floor(Math.random() * allImages.length)];
                 sendResponse({ image: randomImage });
+            });
+        });
+        return true; // Async response
+    } else if (message.type === 'getCustomText') {
+        // Interceptor page requesting custom text settings
+        chrome.storage.sync.get(['pauseMessage', 'pauseSubtext', 'continueButtonText', 'backButtonText'], (result) => {
+            sendResponse({
+                pauseMessage: result.pauseMessage || 'Take a breath',
+                pauseSubtext: result.pauseSubtext || 'You were trying to visit: {url}',
+                continueButtonText: result.continueButtonText || 'Continue to Site',
+                backButtonText: result.backButtonText || 'Go Back'
             });
         });
         return true; // Async response

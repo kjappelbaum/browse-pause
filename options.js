@@ -1,6 +1,25 @@
-let currentImages = [];
-let currentImageUrls = [];
+/**
+ * Options Page Script
+ * 
+ * This script manages the extension's settings page where users can:
+ * - Configure blocked URLs
+ * - Upload local images or add image URLs
+ * - Customize pause screen text
+ * - Save and load all settings
+ * 
+ * The script handles two types of storage:
+ * - chrome.storage.sync: Small data like URLs and text (syncs across devices)
+ * - chrome.storage.local: Large data like uploaded images (local only)
+ */
 
+// Global variables to track current state
+let currentImages = [];      // Array of uploaded local images
+let currentImageUrls = [];   // Array of image URLs
+
+/**
+ * Switches between image management tabs (local vs URLs)
+ * @param {string} tab - Either 'local' or 'urls'
+ */
 function switchImageTab(tab) {
     const tabs = document.querySelectorAll('#imagesTab .tab');
     const contents = document.querySelectorAll('#imagesTab .tab-content');
@@ -17,11 +36,15 @@ function switchImageTab(tab) {
     }
 }
 
+/**
+ * Loads all settings from Chrome storage and populates the UI
+ * This function is called when the options page loads
+ */
 function loadSettings() {
   console.log('Loading settings...');
   
-  // Load URLs using storage.sync
-  chrome.storage.sync.get(['blockedUrls', 'imageUrls'], (result) => {
+  // Load URLs and text settings using storage.sync
+  chrome.storage.sync.get(['blockedUrls', 'imageUrls', 'pauseMessage', 'pauseSubtext', 'continueButtonText', 'backButtonText'], (result) => {
     if (chrome.runtime.lastError) {
       console.error('Error loading sync settings:', chrome.runtime.lastError);
       return;
@@ -35,6 +58,12 @@ function loadSettings() {
     
     currentImageUrls = result.imageUrls || [];
     document.getElementById('imageList').value = currentImageUrls.join('\n');
+    
+    // Load custom text settings
+    document.getElementById('pauseMessage').value = result.pauseMessage || 'Take a breath';
+    document.getElementById('pauseSubtext').value = result.pauseSubtext || 'You were trying to visit: {url}';
+    document.getElementById('continueButtonText').value = result.continueButtonText || 'Continue to Site';
+    document.getElementById('backButtonText').value = result.backButtonText || 'Go Back';
     
     // Load local images using storage.local (for larger data)
     chrome.storage.local.get(['localImages'], (localResult) => {
@@ -50,6 +79,16 @@ function loadSettings() {
   });
 }
 
+/**
+ * Processes uploaded image files with compression and validation
+ * @param {FileList} files - Files selected by user
+ * 
+ * This function:
+ * 1. Validates file types and sizes
+ * 2. Compresses images to reduce storage usage
+ * 3. Converts to data URLs for storage
+ * 4. Updates the preview display
+ */
 function handleImageFiles(files) {
   console.log('Handling files:', files.length);
   Array.from(files).forEach(file => {
@@ -114,6 +153,10 @@ function handleImageFiles(files) {
   });
 }
 
+/**
+ * Updates the image preview display in the options page
+ * Shows thumbnails of uploaded images with remove buttons
+ */
 function displayImagePreviews() {
   console.log('Displaying image previews for', currentImages.length, 'images');
   const preview = document.getElementById('imagePreview');
@@ -144,6 +187,10 @@ function clearAllImages() {
   }
 }
 
+/**
+ * Saves all settings to Chrome storage
+ * Handles both sync storage (URLs, text) and local storage (images)
+ */
 function saveSettings() {
   console.log('Saving settings...');
   
@@ -153,14 +200,25 @@ function saveSettings() {
   const imageUrlText = document.getElementById('imageList').value;
   const imageUrls = imageUrlText.split('\n').filter(url => url.trim());
   
+  // Get custom text values
+  const pauseMessage = document.getElementById('pauseMessage').value;
+  const pauseSubtext = document.getElementById('pauseSubtext').value;
+  const continueButtonText = document.getElementById('continueButtonText').value;
+  const backButtonText = document.getElementById('backButtonText').value;
+  
   console.log('Saving blockedUrls:', blockedUrls);
   console.log('Saving imageUrls:', imageUrls);
+  console.log('Saving custom text settings');
   console.log('Saving localImages:', currentImages.length, 'images');
   
-  // Save smaller data (URLs) to storage.sync
+  // Save smaller data (URLs and text) to storage.sync
   chrome.storage.sync.set({
     blockedUrls: blockedUrls,
-    imageUrls: imageUrls
+    imageUrls: imageUrls,
+    pauseMessage: pauseMessage,
+    pauseSubtext: pauseSubtext,
+    continueButtonText: continueButtonText,
+    backButtonText: backButtonText
     // Note: We don't save the 'images' combined array here anymore since it contains large data URLs
   }, () => {
     if (chrome.runtime.lastError) {
@@ -239,5 +297,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById('imagesTabBtn').classList.add('active');
         document.getElementById('imagesTab').classList.add('active');
+    });
+
+    document.getElementById('textTabBtn').addEventListener('click', () => {
+        // Switch to text customization tab
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.getElementById('textTabBtn').classList.add('active');
+        document.getElementById('textTab').classList.add('active');
     });
 });

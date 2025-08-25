@@ -1,3 +1,17 @@
+/**
+ * Popup Script for Browse Pause Extension
+ * 
+ * This script manages the small popup that appears when users click
+ * the extension icon in the Chrome toolbar. It provides:
+ * - Quick overview of current settings
+ * - Summary of blocked URLs and images
+ * - Link to open full settings page
+ */
+
+/**
+ * Loads and displays current extension settings in the popup
+ * Shows blocked URLs count and image counts from both storage types
+ */
 function loadSettings() {
   chrome.storage.sync.get(['blockedUrls', 'imageUrls'], (result) => {
     const urlList = document.getElementById('urlList');
@@ -21,6 +35,9 @@ function loadSettings() {
   });
 }
 
+/**
+ * Opens the full options page when user clicks the settings button
+ */
 function openOptions() {
   chrome.runtime.openOptionsPage();
 }
